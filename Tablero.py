@@ -128,8 +128,6 @@ class Tablero:
         columna_jugador_x = 2 #random.randint(1, self.tamano)
 
         jugador_x.nodo_actual = self.recorrer_tablero(fila_jugador_x,columna_jugador_x)
-        jugador_x.posicion_emulada.append(fila_jugador_x)
-        jugador_x.posicion_emulada.append(columna_jugador_x)
 
         #########################################################################
 
@@ -137,8 +135,6 @@ class Tablero:
         columna_jugador_y = random.randint(1, self.tamano)
 
         jugador_y.nodo_actual = self.recorrer_tablero(fila_jugador_y,columna_jugador_y)
-        jugador_y.posicion_emulada.append(fila_jugador_y)
-        jugador_y.posicion_emulada.append(columna_jugador_y)
 
         #########################################################################
 
@@ -147,26 +143,43 @@ class Tablero:
 
         return jugador_x, jugador_y
 
-    def colocar_bloqueo(self, fila,columna):
-            nodo_deseado = self.recorrer_tablero(fila,columna)
+    def colocar_bloqueo(self, jugador, fila,columna):
+        nodo_deseado = self.recorrer_tablero(fila, columna)
+        nodo_disponible = self.verificar_casillas_disponibles(jugador.nombre)
 
-            if (nodo_deseado.value == "-"):
+        if nodo_deseado.value == "-":
+            if self.verificar_rutas(nodo_disponible , jugador.nodo_actual):
                 nodo_deseado.value = "#"
+                print("Bloqueo colocado con éxito.")
             else:
-                print("Ya existe algo en esta posicion.")
+                print("No se puede colocar el bloqueo.")
+        else:
+            print("Ya existe algo en esta posición.")
 
-    def verificar_rutas(self, node):
-        # Verificar el nodo actual
-        if node is not None and node.value == "#":
-            return True
-
-        # Realizar verificaciones en las cuatro direcciones
-        if (node is not None and
-            not self.verificar_rutas(node.arriba) and
-            not self.verificar_rutas(node.abajo) and
-            not self.verificar_rutas(node.izquierda) and
-            not self.verificar_rutas(node.derecha)
-            ):
+    def verificar_rutas(self, posicion_deseada, nodo, visitados = []):
+        if nodo.value == "#":
             return False
+        if nodo == posicion_deseada:
+            return True
+        if nodo not in visitados:
+            visitados.append(nodo)
+            arriba = self.verificar_rutas(posicion_deseada, nodo.arriba, visitados)
+            derecha = self.verificar_rutas(posicion_deseada, nodo.derecha, visitados)
+            abajo = self.verificar_rutas(posicion_deseada, nodo.abajo, visitados)
+            izquierda = self.verificar_rutas(posicion_deseada, nodo.izquierda, visitados)
+            return arriba or derecha or abajo or izquierda
 
-        return True
+    def verificar_casillas_disponibles(self, jugador):
+        if jugador == "x":
+            fila_deseada = self.tamano
+            for i in range(1, self.tamano + 1):
+                nodo = self.recorrer_tablero(fila_deseada, i)
+                if (nodo.value != "#" and nodo.value != "y"):
+                    return nodo
+                
+        if jugador == "y":
+            fila_deseada = 1
+            for i in range(1, self.tamano + 1):
+                nodo = self.recorrer_tablero(fila_deseada, i)
+                if (nodo.value != "#" and nodo.value != "x"):
+                    return nodo
